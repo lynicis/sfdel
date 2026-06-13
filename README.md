@@ -12,11 +12,16 @@
 
 ## Table of Contents
 
-- [Quick Start](#quick-start)
-- [What Gets Deleted vs. What Stays](#what-gets-deleted-vs-what-stays)
-- [How It Works](#how-it-works)
-- [Requirements](#requirements)
-- [Detailed Usage](#detailed-usage)
+- [About The Project](#about-the-project)
+  - [What Gets Deleted vs. What Stays](#what-gets-deleted-vs-what-stays)
+  - [How It Works](#how-it-works)
+- [Prerequisites](#prerequisites)
+  - [Granting Full Disk Access](#granting-full-disk-access)
+- [Installation](#installation)
+  - [Homebrew](#homebrew)
+  - [Scoop](#scoop)
+  - [Manual](#manual)
+- [Usage](#usage)
 - [Troubleshooting](#troubleshooting)
 - [Safety Disclaimer](#safety-disclaimer)
 - [Contributing](#contributing)
@@ -24,28 +29,14 @@
 
 ---
 
-## Quick Start
+## About The Project
 
-Download and run in one line:
+`sfdel` is a lightweight, secure shell script designed to permanently wipe your Safari browsing history on macOS without touching other browsing data like cookies, cache, or saved passwords. 
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/lynicis/sfdel/main/just.sh | bash
-```
-
-Or download first:
-
-```bash
-curl -fsSL -o just.sh https://raw.githubusercontent.com/lynicis/sfdel/main/just.sh
-chmod +x just.sh
-./just.sh
-```
-
----
-
-## What Gets Deleted vs. What Stays
+### What Gets Deleted vs. What Stays
 
 | Deleted ❌ | Safe ✅ (not touched) |
-|---|---|
+| :--- | :--- |
 | Browsing history (visited URLs) | Bookmarks |
 | Visit timestamps | Saved passwords |
 | | Cookies |
@@ -53,80 +44,151 @@ chmod +x just.sh
 | | Downloads list |
 | | Local storage / site data |
 
----
+### How It Works
 
-## How It Works
+Safari stores your browsing history in a SQLite database located at `~/Library/Safari/History.db`. The script performs the following actions:
 
-Safari stores your browsing history in a SQLite database at `~/Library/Safari/History.db`. The script:
-
-1. **Connects** to this database using macOS's built-in `sqlite3`.
-2. **Deletes** all rows from `history_items` and `history_visits` tables.
-3. **Vacuums** the database to reclaim disk space.
-
-No other Safari data (bookmarks, passwords, cookies, etc.) is touched.
+1. **Checks/Quits Safari**: Ensures Safari is not actively writing to the database by offering to quit it.
+2. **Database Connection**: Establishes a connection using macOS's built-in `sqlite3` CLI.
+3. **Targeted Deletion**: Runs SQL commands to truncate `history_items` (unique URLs) and `history_visits` (visit timestamps/metadata).
+4. **Database Vacuuming**: Executes the `VACUUM` command to completely rebuild the database file, reclaiming empty space and ensuring zero trace of deleted records.
 
 ---
 
-## Requirements
+## Prerequisites
 
-- **macOS** — This only works on macOS.
-- **Full Disk Access** — Your terminal needs Full Disk Access to read Safari's database.
-- **sqlite3** — Pre-installed on macOS.
+- **macOS**: This tool is designed exclusively for macOS.
+- **sqlite3**: Pre-installed on macOS by default.
+- **Full Disk Access**: Your terminal needs Full Disk Access to modify Safari's SQLite database.
 
 ### Granting Full Disk Access
 
-1. Open **System Settings**
-2. Go to **Privacy & Security** → **Full Disk Access**
-3. Click **+** and add your terminal app (Terminal, iTerm2, Warp, etc.)
-4. Restart your terminal
+To allow `sfdel` to access Safari's history database:
+
+1. Open **System Settings**.
+2. Navigate to **Privacy & Security** → **Full Disk Access**.
+3. Click the **+** button.
+4. Add your preferred terminal application (e.g., Terminal, iTerm2, Warp, Ghostty).
+5. Restart your terminal.
 
 ---
 
-## Detailed Usage
+## Installation
 
-1. **Close Safari** — The script tries to quit Safari automatically. If it can't, close it manually.
-2. **Run the script** — See [Quick Start](#quick-start).
-3. **Confirm deletion** — The script shows what it found, then asks:
+### Homebrew
 
+Install via Homebrew tap:
+
+```bash
+# Tap the repository
+brew tap lynicis/tap
+
+# Install sfdel
+brew install sfdel
+```
+
+Or install directly in one step:
+
+```bash
+brew install lynicis/tap/sfdel
+```
+
+### Scoop
+
+Install via Scoop bucket:
+
+```powershell
+# Add the bucket
+scoop bucket add lynicis https://github.com/lynicis/scoop-bucket.git
+
+# Install sfdel
+scoop install sfdel
+```
+
+### Manual
+
+If you prefer not to use a package manager, you can install the script manually:
+
+```bash
+# Download the script from GitHub releases
+curl -fsSL -o sfdel "https://raw.githubusercontent.com/lynicis/sfdel/main/sfdel.sh"
+
+# Make the script executable
+chmod +x sfdel
+
+# Move the script to a directory in your PATH (optional)
+mv sfdel /usr/local/bin/
+```
+
+---
+
+## Usage
+
+### One-line Execution (No Install)
+
+Run the latest version of the script immediately without installing:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/lynicis/sfdel/main/sfdel.sh | bash
+```
+
+### Installed Execution
+
+If installed via Homebrew, Scoop, or placed in your `PATH`:
+
+```bash
+sfdel
+```
+
+### Command Flow
+
+1. **Confirm deletion**: The script displays the number of unique URLs and total visits found, and prompts you:
    ```
    Delete all browsing history? This cannot be undone. [y/N]:
    ```
-
-   Type `y` + **Enter** to proceed.
-
-4. **Reopen Safari** — After deletion, the script asks if you want to reopen Safari.
+   Type `y` and press **Enter** to proceed.
+2. **Reopen Safari**: After successful deletion, you will be prompted to reopen Safari if desired.
 
 ---
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---|---|
-| `Cannot access History.db` | Grant [Full Disk Access](#granting-full-disk-access) to your terminal. |
-| `Safari won't quit` | Close Safari manually, then run the script again. |
-| `History is already empty` | Nothing to delete. You're all set! |
-| `sqlite3 is required but not found` | Install Xcode CLI tools: `xcode-select --install` |
+| Problem | Cause | Solution |
+| :--- | :--- | :--- |
+| `[ERROR] Cannot access History.db` | Missing permissions | Grant [Full Disk Access](#granting-full-disk-access) to your terminal. |
+| `[ERROR] Could not quit Safari` | Safari is frozen or unresponsive | Close Safari manually (or Force Quit), then re-run the script. |
+| `[INFO] History is already empty` | No records found | Safari history is already clear. No action is needed. |
+| `[ERROR] sqlite3 is required` | Missing sqlite3 utility | Install Xcode Command Line Tools: `xcode-select --install` |
 
 ---
 
 ## Safety Disclaimer
 
-- This script **permanently deletes** Safari browsing history. **It cannot be undone.**
-- It **does not** delete bookmarks, passwords, cookies, cache, or any other data.
-- Make backups if you're unsure.
+> [!WARNING]
+> This script **permanently deletes** your Safari browsing history. This action **cannot be undone**.
+> 
+> It is highly recommended to create a backup of your `~/Library/Safari` folder before running if you have any critical data.
+> 
+> `sfdel` **does not** delete bookmarks, passwords, cookies, cache, or any other private data.
 
 ---
 
 ## Contributing
 
-Found a bug or have an idea? Open an [issue](https://github.com/lynicis/sfdel/issues) or submit a pull request.
+Contributions make the open-source community an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ---
 
 ## License
 
-This project is open source under the [MIT License](LICENSE).
-
----
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
 
 <p align="center">Made with ❤️ for a cleaner browsing history.</p>
