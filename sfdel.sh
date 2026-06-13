@@ -16,18 +16,18 @@ QUIT_WAIT_DELAY=0.5
 
 # --- Colors (disabled if not a terminal) ---
 if [[ -t 1 ]]; then
-    RED='\033[0;31m'
-    GREEN='\033[0;32m'
-    YELLOW='\033[0;33m'
-    BOLD='\033[1m'
-    RESET='\033[0m'
+    RED=$'\e[0;31m'
+    GREEN=$'\e[0;32m'
+    YELLOW=$'\e[0;33m'
+    BOLD=$'\e[1m'
+    RESET=$'\e[0m'
 else
     RED='' GREEN='' YELLOW='' BOLD='' RESET=''
 fi
 
-info()  { printf "%s[INFO]%s  %s\n" "${GREEN}" "${RESET}" "$*"; }
-warn()  { printf "%s[WARN]%s  %s\n" "${YELLOW}" "${RESET}" "$*"; }
-error() { printf "%s[ERROR]%s %s\n" "${RED}" "${RESET}" "$*" >&2; }
+info()  { printf "%s[INFO]%s  %b\n" "${GREEN}" "${RESET}" "$*"; }
+warn()  { printf "%s[WARN]%s  %b\n" "${YELLOW}" "${RESET}" "$*"; }
+error() { printf "%s[ERROR]%s %b\n" "${RED}" "${RESET}" "$*" >&2; }
 die()   { error "$*"; exit 1; }
 
 confirm() {
