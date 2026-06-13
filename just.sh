@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-VERSION="1.0.0"
+VERSION="1.0.1"
 HISTORY_DB="$HOME/Library/Safari/History.db"
 QUIT_WAIT_STEPS=20
 QUIT_WAIT_DELAY=0.5
