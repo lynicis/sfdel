@@ -1,0 +1,154 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  PROJECT: just-delete-safari-history
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "tag=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Prepare artifacts
+        run: |
+          mkdir -p dist
+          cp just.sh dist/just.sh
+          cp aliases.sh dist/aliases.sh
+          chmod +x dist/just.sh
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum just.sh aliases.sh > SHA256SUMS
+          echo "=== SHA256SUMS ==="
+          cat SHA256SUMS
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          files: |
+            dist/just.sh
+            dist/aliases.sh
+            dist/SHA256SUMS
+          body: |
+            ## ${{ env.PROJECT }} ${{ steps.version.outputs.tag }}
+
+            ### Artifacts
+            - `just.sh` — Executable script
+            - `aliases.sh` — Aliases file (source in your shell rc)
+            - `SHA256SUMS` — Checksums
+
+            ### Quick Install
+            ```bash
+            curl -fsSL -o just.sh "https://github.com/lynicis/${{ env.PROJECT }}/releases/download/${{ steps.version.outputs.tag }}/just.sh"
+            chmod +x just.sh
+            ./just.sh
+            ```
+
+            ### Aliases
+            ```bash
+            # Source aliases in ~/.zshrc or ~/.bashrc
+            source <(curl -fsSL "https://github.com/lynicis/${{ env.PROJECT }}/releases/download/${{ steps.version.outputs.tag }}/aliases.sh")
+            # Then use:
+            #   just   — delete safari history
+            #   sfdel  — same
+            ```
+
+      - name: Ensure tap and bucket repos exist
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+        run: |
+          for repo in "homebrew-tap" "scoop-bucket"; do
+            if ! gh repo view "lynicis/$repo" &>/dev/null; then
+              gh repo create "lynicis/$repo" --public \
+                --description "$repo for ${{ env.PROJECT }}" --confirm
+            fi
+          done
+
+      - name: Publish to Homebrew tap
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          ARCHIVE_URL="https://github.com/lynicis/${{ env.PROJECT }}/archive/refs/tags/${TAG}.tar.gz"
+          SHA=$(curl -sL "$ARCHIVE_URL" | sha256sum | awk '{print $1}')
+
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/lynicis/homebrew-tap.git"
+          cd homebrew-tap
+          mkdir -p Formula
+
+          cat > "Formula/${{ env.PROJECT }}.rb" <<RUBY
+          class JustDeleteSafariHistory < Formula
+            desc "Delete Safari browsing history on macOS"
+            homepage "https://github.com/lynicis/${{ env.PROJECT }}"
+            url "${ARCHIVE_URL}"
+            sha256 "${SHA}"
+            license "MIT"
+
+            def install
+              bin.install "just.sh" => "just-delete-safari-history"
+            end
+          end
+          RUBY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "${{ env.PROJECT }} ${TAG}"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Publish to Scoop bucket
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          JUST_SH_URL="https://github.com/lynicis/${{ env.PROJECT }}/releases/download/${TAG}/just.sh"
+          SHA=$(curl -sL "$JUST_SH_URL" | sha256sum | awk '{print $1}')
+
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/lynicis/scoop-bucket.git"
+          cd scoop-bucket
+          mkdir -p bucket
+
+          cat > "bucket/${{ env.PROJECT }}.json" <<JSON
+          {
+            "version": "${TAG#v}",
+            "description": "Delete Safari browsing history on macOS",
+            "homepage": "https://github.com/lynicis/${{ env.PROJECT }}",
+            "license": "MIT",
+            "url": "${JUST_SH_URL}",
+            "hash": "${SHA}",
+            "bin": "just-delete-safari-history"
+          }
+          JSON
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "${{ env.PROJECT }} ${TAG}"
+            git push
+          else
+            echo "No changes to commit"
+          fi
