@@ -1,4 +1,4 @@
-<h1 align="center">just-delete-safari-history</h1>
+<h1 align="center">sfdel</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/macOS-000000?logo=apple&logoColor=white" alt="macOS">
@@ -29,13 +29,13 @@
 Download and run in one line:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/lynicis/just-delete-safari-history/main/just.sh | bash
+curl -fsSL https://raw.githubusercontent.com/lynicis/sfdel/main/just.sh | bash
 ```
 
 Or download first:
 
 ```bash
-curl -fsSL -o just.sh https://raw.githubusercontent.com/lynicis/just-delete-safari-history/main/just.sh
+curl -fsSL -o just.sh https://raw.githubusercontent.com/lynicis/sfdel/main/just.sh
 chmod +x just.sh
 ./just.sh
 ```
@@ -119,7 +119,7 @@ No other Safari data (bookmarks, passwords, cookies, etc.) is touched.
 
 ## Contributing
 
-Found a bug or have an idea? Open an [issue](https://github.com/lynicis/just-delete-safari-history/issues) or submit a pull request.
+Found a bug or have an idea? Open an [issue](https://github.com/lynicis/sfdel/issues) or submit a pull request.
 
 ---
 

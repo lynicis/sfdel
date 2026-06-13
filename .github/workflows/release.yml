@@ -6,7 +6,7 @@ on:
       - "v*"
 
 env:
-  PROJECT: just-delete-safari-history
+  PROJECT: sfdel
 
 jobs:
   release:
@@ -29,14 +29,13 @@ jobs:
       - name: Prepare artifacts
         run: |
           mkdir -p dist
-          cp just.sh dist/just.sh
-          cp aliases.sh dist/aliases.sh
-          chmod +x dist/just.sh
+          cp sfdel.sh dist/sfdel.sh
+          chmod +x dist/sfdel.sh
 
       - name: Generate checksums
         run: |
           cd dist
-          sha256sum just.sh aliases.sh > SHA256SUMS
+          sha256sum sfdel.sh > SHA256SUMS
           echo "=== SHA256SUMS ==="
           cat SHA256SUMS
 
@@ -45,31 +44,20 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           files: |
-            dist/just.sh
-            dist/aliases.sh
+            dist/sfdel.sh
             dist/SHA256SUMS
           body: |
             ## ${{ env.PROJECT }} ${{ steps.version.outputs.tag }}
 
             ### Artifacts
-            - `just.sh` — Executable script
-            - `aliases.sh` — Aliases file (source in your shell rc)
+            - `sfdel.sh` — Executable script
             - `SHA256SUMS` — Checksums
 
             ### Quick Install
             ```bash
-            curl -fsSL -o just.sh "https://github.com/lynicis/${{ env.PROJECT }}/releases/download/${{ steps.version.outputs.tag }}/just.sh"
-            chmod +x just.sh
-            ./just.sh
-            ```
-
-            ### Aliases
-            ```bash
-            # Source aliases in ~/.zshrc or ~/.bashrc
-            source <(curl -fsSL "https://github.com/lynicis/${{ env.PROJECT }}/releases/download/${{ steps.version.outputs.tag }}/aliases.sh")
-            # Then use:
-            #   just   — delete safari history
-            #   sfdel  — same
+            curl -fsSL -o sfdel.sh "https://github.com/lynicis/${{ env.PROJECT }}/releases/download/${{ steps.version.outputs.tag }}/sfdel.sh"
+            chmod +x sfdel.sh
+            ./sfdel.sh
             ```
 
       - name: Ensure tap and bucket repos exist
@@ -96,7 +84,7 @@ jobs:
           mkdir -p Formula
 
           cat > "Formula/${{ env.PROJECT }}.rb" <<RUBY
-          class JustDeleteSafariHistory < Formula
+          class sfdel < Formula
             desc "Delete Safari browsing history on macOS"
             homepage "https://github.com/lynicis/${{ env.PROJECT }}"
             url "${ARCHIVE_URL}"
@@ -104,7 +92,7 @@ jobs:
             license "MIT"
 
             def install
-              bin.install "just.sh" => "just-delete-safari-history"
+              bin.install "sfdel.sh" => "sfdel"
             end
           end
           RUBY
@@ -124,7 +112,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PAT }}
         run: |
           TAG="${{ steps.version.outputs.tag }}"
-          JUST_SH_URL="https://github.com/lynicis/${{ env.PROJECT }}/releases/download/${TAG}/just.sh"
+          JUST_SH_URL="https://github.com/lynicis/${{ env.PROJECT }}/releases/download/${TAG}/sfdel.sh"
           SHA=$(curl -sL "$JUST_SH_URL" | sha256sum | awk '{print $1}')
 
           git clone "https://x-access-token:${GH_TOKEN}@github.com/lynicis/scoop-bucket.git"
@@ -139,7 +127,7 @@ jobs:
             "license": "MIT",
             "url": "${JUST_SH_URL}",
             "hash": "${SHA}",
-            "bin": "just-delete-safari-history"
+            "bin": "sfdel"
           }
           JSON
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# just.sh — delete Safari browsing history from History.db
+# sfdel.sh — delete Safari browsing history from History.db
 #
 # Requires: macOS, Full Disk Access granted to Terminal (or your terminal app).
 #
@@ -49,7 +49,7 @@ quit_safari() {
 
 # --- Version ---
 if [[ "${1-}" == "--version" || "${1-}" == "-v" ]]; then
-    echo "just-delete-safari-history $VERSION"
+    echo "sfdel $VERSION"
     exit 0
 fi
 
