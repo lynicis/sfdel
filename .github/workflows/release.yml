@@ -121,9 +121,8 @@ jobs:
 
           git clone "https://x-access-token:${GH_TOKEN}@github.com/lynicis/scoop-bucket.git"
           cd scoop-bucket
-          mkdir -p bucket
 
-          cat > "bucket/${{ env.PROJECT }}.json" <<JSON
+          cat > "${{ env.PROJECT }}.json" <<JSON
           {
             "version": "${TAG#v}",
             "description": "Delete Safari browsing history on macOS",
