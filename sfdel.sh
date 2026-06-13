@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-VERSION="1.0.1"
+VERSION="1.0.2"
 HISTORY_DB="$HOME/Library/Safari/History.db"
 QUIT_WAIT_STEPS=20
 QUIT_WAIT_DELAY=0.5
@@ -58,9 +58,6 @@ fi
 [[ -f "$HISTORY_DB" ]] || die "History database not found at: $HISTORY_DB"
 command -v sqlite3 &>/dev/null || die "sqlite3 is required but not found."
 
-# --- Quit Safari if running ---
-pgrep -xq "Safari" && quit_safari
-
 # --- Check we can read the database (Full Disk Access test) ---
 if ! sqlite3 "$HISTORY_DB" "SELECT 1;" &>/dev/null; then
     die "Cannot access History.db. Grant Full Disk Access to your terminal app:\n" \
@@ -85,6 +82,13 @@ fi
 # --- Confirm ---
 confirm "Delete all browsing history? This cannot be undone." || { info "Aborted."; exit 0; }
 
+# --- Quit Safari if running ---
+WAS_RUNNING=0
+if pgrep -xq "Safari"; then
+    WAS_RUNNING=1
+    quit_safari
+fi
+
 # --- Delete history ---
 info "Deleting browsing history..."
 sqlite3 "$HISTORY_DB" <<'SQL'
@@ -95,10 +99,12 @@ SQL
 info "Browsing history deleted."
 
 # --- Offer to reopen Safari ---
-echo ""
-if confirm "Reopen Safari"; then
-    open -a Safari
-    info "Safari reopened."
+if (( WAS_RUNNING )); then
+    echo ""
+    if confirm "Reopen Safari"; then
+        open -a Safari
+        info "Safari reopened."
+    fi
 fi
 
 echo ""
