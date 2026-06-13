@@ -84,7 +84,7 @@ jobs:
           mkdir -p Formula
 
           cat > "Formula/${{ env.PROJECT }}.rb" <<RUBY
-          class sfdel < Formula
+          class Sfdel < Formula
             desc "Delete Safari browsing history on macOS"
             homepage "https://github.com/lynicis/${{ env.PROJECT }}"
             url "${ARCHIVE_URL}"
@@ -93,6 +93,10 @@ jobs:
 
             def install
               bin.install "sfdel.sh" => "sfdel"
+            end
+
+            test do
+              assert_match "sfdel", shell_output("#{bin}/sfdel --version")
             end
           end
           RUBY
