@@ -19,7 +19,6 @@
   - [Granting Full Disk Access](#granting-full-disk-access)
 - [Installation](#installation)
   - [Homebrew](#homebrew)
-  - [Scoop](#scoop)
   - [Manual](#manual)
 - [Usage](#usage)
 - [Troubleshooting](#troubleshooting)
@@ -93,18 +92,6 @@ Or install directly in one step:
 brew install lynicis/tap/sfdel
 ```
 
-### Scoop
-
-Install via Scoop bucket:
-
-```powershell
-# Add the bucket
-scoop bucket add lynicis https://github.com/lynicis/scoop-bucket.git
-
-# Install sfdel
-scoop install sfdel
-```
-
 ### Manual
 
 If you prefer not to use a package manager, you can install the script manually:
@@ -134,7 +121,7 @@ curl -fsSL https://raw.githubusercontent.com/lynicis/sfdel/main/sfdel.sh | bash
 
 ### Installed Execution
 
-If installed via Homebrew, Scoop, or placed in your `PATH`:
+If installed via Homebrew or placed in your `PATH`:
 
 ```bash
 sfdel

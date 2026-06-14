@@ -60,16 +60,15 @@ jobs:
             ./sfdel.sh
             ```
 
-      - name: Ensure tap and bucket repos exist
+      - name: Ensure tap repo exists
         env:
           GH_TOKEN: ${{ secrets.PAT }}
         run: |
-          for repo in "homebrew-tap" "scoop-bucket"; do
-            if ! gh repo view "lynicis/$repo" &>/dev/null; then
-              gh repo create "lynicis/$repo" --public \
-                --description "$repo for ${{ env.PROJECT }}" --confirm
-            fi
-          done
+          repo="homebrew-tap"
+          if ! gh repo view "lynicis/$repo" &>/dev/null; then
+            gh repo create "lynicis/$repo" --public \
+              --description "$repo for ${{ env.PROJECT }}" --confirm
+          fi
 
       - name: Publish to Homebrew tap
         env:
@@ -111,35 +110,4 @@ jobs:
             echo "No changes to commit"
           fi
 
-      - name: Publish to Scoop bucket
-        env:
-          GH_TOKEN: ${{ secrets.PAT }}
-        run: |
-          TAG="${{ steps.version.outputs.tag }}"
-          JUST_SH_URL="https://github.com/lynicis/${{ env.PROJECT }}/releases/download/${TAG}/sfdel.sh"
-          SHA=$(curl -sL "$JUST_SH_URL" | sha256sum | awk '{print $1}')
 
-          git clone "https://x-access-token:${GH_TOKEN}@github.com/lynicis/scoop-bucket.git"
-          cd scoop-bucket
-
-          cat > "${{ env.PROJECT }}.json" <<JSON
-          {
-            "version": "${TAG#v}",
-            "description": "Delete Safari browsing history on macOS",
-            "homepage": "https://github.com/lynicis/${{ env.PROJECT }}",
-            "license": "MIT",
-            "url": "${JUST_SH_URL}",
-            "hash": "${SHA}",
-            "bin": "sfdel"
-          }
-          JSON
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if ! git diff --cached --quiet; then
-            git commit -m "${{ env.PROJECT }} ${TAG}"
-            git push
-          else
-            echo "No changes to commit"
-          fi
